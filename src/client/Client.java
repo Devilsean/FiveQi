@@ -233,7 +233,15 @@ public class Client {
 
                 case Protocol.ROOM_LIST:
                     if (parts.length >= 2) {
-                        handler.onRoomListUpdate(parts[1]);
+                        // 重新组合房间列表数据（从parts[1]开始的所有部分）
+                        StringBuilder roomListBuilder = new StringBuilder();
+                        for (int i = 1; i < parts.length; i++) {
+                            if (i > 1) {
+                                roomListBuilder.append(Protocol.DELIMITER);
+                            }
+                            roomListBuilder.append(parts[i]);
+                        }
+                        handler.onRoomListUpdate(roomListBuilder.toString());
                     }
                     break;
 
