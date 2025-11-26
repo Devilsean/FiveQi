@@ -1,28 +1,31 @@
 @echo off
-chcp 65001 >nul
+chcp 65001>nul
 echo ========================================
-echo 启动五子棋客户端
+echo Starting FiveQi Client
 echo ========================================
+
+REM Switch to project root directory
+cd /d "%~dp0.."
 echo.
 
-REM 检查是否已编译
+REM Check if compiled
 if not exist "bin\client\GameGUI.class" (
-    echo 错误：项目尚未编译！
-    echo 请先运行 compile.bat 编译项目
+    echo Error: Project not compiled
+    echo Please run compile.bat first
     echo.
     pause
     exit /b 1
 )
 
-REM 启动客户端主菜单
-echo 客户端启动中...
+REM Start client main menu
+echo Client starting...
 echo.
 
 java -cp bin client.MainMenu
 
-REM 如果客户端关闭，暂停以查看可能的错误信息
+REM Pause if client exits with error
 if %errorlevel% neq 0 (
     echo.
-    echo 客户端异常退出
+    echo Client exited abnormally
     pause
 )

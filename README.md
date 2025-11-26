@@ -40,24 +40,87 @@ FiveQi/
 
 ### 环境要求
 
-- JDK 8 或更高版本
+- **JDK 8 或更高版本**（必须是 JDK，不是 JRE）
 - Windows 或 Linux 操作系统
 
+### 依赖安装
+
+#### Windows
+
+1. **下载 JDK**
+   - Oracle JDK: <https://www.oracle.com/java/technologies/downloads/>
+   - OpenJDK (推荐): <https://adoptium.net/>
+
+2. **安装 JDK**
+   - 运行下载的安装程序
+   - 记住安装路径（如 `C:\Program Files\Java\jdk-11`）
+
+3. **配置环境变量**
+   - 右键"此电脑" → "属性" → "高级系统设置" → "环境变量"
+   - 新建系统变量 `JAVA_HOME`，值为JDK 安装路径
+   - 编辑 `Path` 变量，添加 `%JAVA_HOME%\bin`
+
+4. **验证安装**
+
+   ```bash
+   java -version
+   javac -version
+   ```
+
+#### Linux
+
+**Ubuntu/Debian:**
+
+```bash
+sudo apt update
+sudo apt install openjdk-11-jdk
+```
+
+**CentOS/RHEL:**
+
+```bash
+sudo yum install java-11-openjdk-devel
+```
+
+**验证安装:**
+
+```bash
+java -version
+javac -version
+```
+
 ### 本地运行
+
+> **注意**：
+>
+> - 所有脚本都支持从项目根目录或 scripts 目录运行
+> - 编译脚本会自动检测 Java 环境，如未安装会给出安装提示
 
 #### 1. 编译项目
 
 **Windows:**
 
 ```bash
+# 从项目根目录运行
 scripts\compile.bat
+
+# 或从 scripts 目录运行
+cd scripts
+compile.bat
 ```
 
 **Linux:**
 
 ```bash
+# 设置执行权限（首次运行）
 chmod +x scripts/*.sh
+
+# 从项目根目录运行
 scripts/compile.sh
+
+# 或从 scripts 目录运行
+cd scripts
+./compile.sh
 ```
 
 #### 2. 启动服务器
@@ -65,13 +128,23 @@ scripts/compile.sh
 **Windows:**
 
 ```bash
+# 从项目根目录运行
 scripts\run_server.bat
+
+# 或从 scripts 目录运行
+cd scripts
+run_server.bat
 ```
 
 **Linux:**
 
 ```bash
+# 从项目根目录运行
 scripts/run_server.sh
+
+# 或从 scripts 目录运行
+cd scripts
+./run_server.sh
 ```
 
 服务器默认端口：8888
@@ -81,13 +154,23 @@ scripts/run_server.sh
 **Windows:**
 
 ```bash
+# 从项目根目录运行
 scripts\run_client.bat
+
+# 或从 scripts 目录运行
+cd scripts
+run_client.bat
 ```
 
 **Linux:**
 
 ```bash
+# 从项目根目录运行
 scripts/run_client.sh
+
+# 或从 scripts 目录运行
+cd scripts
+./run_client.sh
 ```
 
 ### 远程服务器部署

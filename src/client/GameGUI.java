@@ -41,6 +41,13 @@ public class GameGUI extends JFrame implements NetworkHandler {
     private static final int BOARD_MARGIN = 30;
     private static final int STONE_RADIUS = 16;
 
+    // 统一配色方案
+    private static final Color PRIMARY_COLOR = new Color(52, 73, 94); // 深灰蓝
+    private static final Color ACCENT_COLOR = new Color(41, 128, 185); // 蓝色强调
+    private static final Color BG_COLOR = new Color(245, 247, 250); // 浅灰背景
+    private static final Color TEXT_DARK = new Color(44, 62, 80); // 深色文字
+    private static final Color SECONDARY_BTN = new Color(127, 140, 141); // 次要按钮
+
     /**
      * 默认构造函数（用于独立启动，显示登录对话框）
      */
@@ -93,11 +100,11 @@ public class GameGUI extends JFrame implements NetworkHandler {
         setTitle("五子棋联机对战");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(0, 0));
-        getContentPane().setBackground(new Color(240, 242, 245));
+        getContentPane().setBackground(BG_COLOR);
 
         // 创建顶部导航栏面板 - 横跨整个窗口
         JPanel navPanel = new JPanel(new GridLayout(1, 2, 10, 0));
-        navPanel.setBackground(new Color(240, 242, 245));
+        navPanel.setBackground(BG_COLOR);
         navPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
         // 状态标签 - 现代化设计
@@ -116,9 +123,10 @@ public class GameGUI extends JFrame implements NetworkHandler {
         seatStatusLabel.setFont(new Font("微软雅黑", Font.BOLD, 12));
         seatStatusLabel.setForeground(Color.WHITE);
         seatStatusLabel.setOpaque(true);
-        seatStatusLabel.setBackground(new Color(52, 152, 219));
+        seatStatusLabel.setBackground(Color.WHITE);
+        seatStatusLabel.setForeground(TEXT_DARK);
         seatStatusLabel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(41, 128, 185), 1),
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
                 BorderFactory.createEmptyBorder(10, 15, 10, 15)));
         navPanel.add(seatStatusLabel);
 
@@ -126,12 +134,12 @@ public class GameGUI extends JFrame implements NetworkHandler {
 
         // 创建中间内容面板（棋盘+功能区）
         JPanel contentPanel = new JPanel(new BorderLayout(15, 0));
-        contentPanel.setBackground(new Color(240, 242, 245));
+        contentPanel.setBackground(BG_COLOR);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(0, 15, 15, 15));
 
         // 创建棋盘面板（带阴影效果）
         JPanel boardContainer = new JPanel(new BorderLayout());
-        boardContainer.setBackground(new Color(240, 242, 245));
+        boardContainer.setBackground(BG_COLOR);
 
         boardPanel = new ChessBoardPanel();
         boardPanel.setPreferredSize(new Dimension(Protocol.BOARD_SIZE * CELL_SIZE + BOARD_MARGIN * 2,
@@ -145,11 +153,11 @@ public class GameGUI extends JFrame implements NetworkHandler {
         // 创建右侧面板
         JPanel rightPanel = new JPanel(new BorderLayout(8, 8));
         rightPanel.setPreferredSize(new Dimension(320, 0));
-        rightPanel.setBackground(new Color(240, 242, 245));
+        rightPanel.setBackground(BG_COLOR);
 
         // 中间面板：系统消息 + 聊天室
         JPanel centerPanel = new JPanel(new GridLayout(2, 1, 8, 8));
-        centerPanel.setBackground(new Color(240, 242, 245));
+        centerPanel.setBackground(BG_COLOR);
 
         // 系统消息区域 - 优化边框
         JPanel systemPanel = new JPanel(new BorderLayout(5, 5));
@@ -162,7 +170,7 @@ public class GameGUI extends JFrame implements NetworkHandler {
                         javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
                         javax.swing.border.TitledBorder.DEFAULT_POSITION,
                         new Font("微软雅黑", Font.BOLD, 12),
-                        new Color(52, 152, 219))));
+                        TEXT_DARK)));
 
         systemArea = new JTextArea();
         systemArea.setEditable(false);
@@ -190,7 +198,7 @@ public class GameGUI extends JFrame implements NetworkHandler {
                         javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
                         javax.swing.border.TitledBorder.DEFAULT_POSITION,
                         new Font("微软雅黑", Font.BOLD, 12),
-                        new Color(46, 204, 113))));
+                        TEXT_DARK)));
 
         chatArea = new JTextArea();
         chatArea.setEditable(false);
@@ -219,13 +227,29 @@ public class GameGUI extends JFrame implements NetworkHandler {
 
         sendButton = new JButton("发送");
         sendButton.setFont(new Font("微软雅黑", Font.BOLD, 12));
-        sendButton.setBackground(new Color(46, 204, 113));
-        sendButton.setForeground(Color.WHITE);
+        sendButton.setBackground(Color.WHITE);
+        sendButton.setForeground(TEXT_DARK);
         sendButton.setFocusPainted(false);
-        sendButton.setBorderPainted(false);
+        sendButton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)));
+        sendButton.setOpaque(true);
         sendButton.setPreferredSize(new Dimension(60, 32));
         sendButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         sendButton.addActionListener(e -> sendChat());
+
+        // 发送按钮悬停效果
+        sendButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                sendButton.setBackground(new Color(250, 250, 250));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                sendButton.setBackground(Color.WHITE);
+            }
+        });
 
         chatInputPanel.add(chatInput, BorderLayout.CENTER);
         chatInputPanel.add(sendButton, BorderLayout.EAST);
@@ -237,7 +261,7 @@ public class GameGUI extends JFrame implements NetworkHandler {
 
         // 功能按钮面板 - 固定3个按钮
         buttonPanel = new JPanel(new GridLayout(3, 1, 6, 6));
-        buttonPanel.setBackground(new Color(240, 242, 245));
+        buttonPanel.setBackground(BG_COLOR);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         actionButtons = new HashMap<>();
 
@@ -278,31 +302,31 @@ public class GameGUI extends JFrame implements NetworkHandler {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setPreferredSize(new Dimension(0, 40));
 
-        // 根据按钮类型设置不同颜色
+        // 根据按钮类型设置统一颜色
         if (text.contains("黑棋")) {
-            button.setBackground(new Color(52, 73, 94));
+            button.setBackground(PRIMARY_COLOR);
             button.setForeground(Color.WHITE);
         } else if (text.contains("白棋")) {
             button.setBackground(new Color(236, 240, 241));
-            button.setForeground(new Color(52, 73, 94));
+            button.setForeground(PRIMARY_COLOR);
         } else if (text.contains("观战")) {
-            button.setBackground(new Color(155, 89, 182));
+            button.setBackground(PRIMARY_COLOR);
             button.setForeground(Color.WHITE);
         } else if (text.contains("对战")) {
-            button.setBackground(new Color(231, 76, 60));
+            button.setBackground(ACCENT_COLOR);
             button.setForeground(Color.WHITE);
         } else if (text.contains("退出")) {
-            button.setBackground(new Color(149, 165, 166));
+            button.setBackground(SECONDARY_BTN);
             button.setForeground(Color.WHITE);
         }
 
-        // 添加鼠标悬停效果
+        // 添加鼠标悬停效果- 轻微变暗
         Color originalBg = button.getBackground();
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
                 if (button.isEnabled()) {
-                    button.setBackground(brighten(originalBg));
+                    button.setBackground(darken(originalBg, 0.9f));
                 }
             }
 
@@ -319,12 +343,12 @@ public class GameGUI extends JFrame implements NetworkHandler {
     }
 
     /**
-     * 使颜色变亮
+     * 使颜色变暗
      */
-    private Color brighten(Color color) {
-        int r = Math.min(255, (int) (color.getRed() * 1.1));
-        int g = Math.min(255, (int) (color.getGreen() * 1.1));
-        int b = Math.min(255, (int) (color.getBlue() * 1.1));
+    private Color darken(Color color, float factor) {
+        int r = (int) (color.getRed() * factor);
+        int g = (int) (color.getGreen() * factor);
+        int b = (int) (color.getBlue() * factor);
         return new Color(r, g, b);
     }
 
@@ -522,16 +546,16 @@ public class GameGUI extends JFrame implements NetworkHandler {
                 btn2.setVisible(true);
 
                 if (isSpectator) {
-                    // 观战席：显示坐下黑棋席和坐下白棋席
-                    updateButton(btn1, "坐下黑棋席", new Color(52, 73, 94));
-                    updateButton(btn2, "坐下白棋席", new Color(236, 240, 241), new Color(52, 73, 94));
+                    // 观战席：显示坐下黑棋席和坐下白棋席（都是白色）
+                    updateButton(btn1, "坐下黑棋席");
+                    updateButton(btn2, "坐下白棋席");
                 } else if (isBlackPlayer) {
                     // 黑棋席：根据白棋席是否有人决定按钮
-                    updateButton(btn2, "进入观战席", new Color(155, 89, 182));
+                    updateButton(btn2, "进入观战席");
                     // btn1根据席位状态在onSeatUpdate中更新
                 } else if (isWhitePlayer) {
                     // 白棋席：根据黑棋席是否有人决定按钮
-                    updateButton(btn2, "进入观战席", new Color(155, 89, 182));
+                    updateButton(btn2, "进入观战席");
                     // btn1根据席位状态在onSeatUpdate中更新
                 }
             }
@@ -542,19 +566,12 @@ public class GameGUI extends JFrame implements NetworkHandler {
     }
 
     /**
-     * 更新按钮文本和颜色
+     * 更新按钮文本（统一白色背景）
      */
-    private void updateButton(JButton button, String text, Color bgColor) {
-        updateButton(button, text, bgColor, Color.WHITE);
-    }
-
-    /**
-     * 更新按钮文本和颜色（带前景色）
-     */
-    private void updateButton(JButton button, String text, Color bgColor, Color fgColor) {
+    private void updateButton(JButton button, String text) {
         button.setText(text);
-        button.setBackground(bgColor);
-        button.setForeground(fgColor);
+        button.setBackground(Color.WHITE);
+        button.setForeground(TEXT_DARK);
     }
 
     /**
@@ -836,16 +853,16 @@ public class GameGUI extends JFrame implements NetworkHandler {
                 if (isBlackPlayer) {
                     // 黑棋席玩家：如果白棋席有人则显示"发起对战"，否则显示"坐下白棋席"
                     if (whiteSeat.equals("空")) {
-                        updateButton(btn1, "坐下白棋席", new Color(236, 240, 241), new Color(52, 73, 94));
+                        updateButton(btn1, "坐下白棋席");
                     } else {
-                        updateButton(btn1, "发起对战", new Color(231, 76, 60));
+                        updateButton(btn1, "发起对战");
                     }
                 } else if (isWhitePlayer) {
                     // 白棋席玩家：如果黑棋席有人则显示"发起对战"，否则显示"坐下黑棋席"
                     if (blackSeat.equals("空")) {
-                        updateButton(btn1, "坐下黑棋席", new Color(52, 73, 94));
+                        updateButton(btn1, "坐下黑棋席");
                     } else {
-                        updateButton(btn1, "发起对战", new Color(231, 76, 60));
+                        updateButton(btn1, "发起对战");
                     }
                 }
             }

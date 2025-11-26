@@ -11,9 +11,13 @@ import java.awt.event.*;
 public class MainMenu extends JFrame {
 
     private JButton startButton;
-    private JButton rulesButton;
     private JButton aboutButton;
     private JButton exitButton;
+
+    // 统一配色方案
+    private static final Color PRIMARY_COLOR = new Color(52, 73, 94); // 深灰蓝
+    private static final Color BG_COLOR = new Color(245, 247, 250); // 浅灰背景
+    private static final Color TEXT_DARK = new Color(44, 62, 80); // 深色文字
 
     public MainMenu() {
         initComponents();
@@ -31,10 +35,10 @@ public class MainMenu extends JFrame {
         setSize(650, 550);
         setLocationRelativeTo(null);
 
-        // 主面板 - 渐变背景
+        // 主面板
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
-        mainPanel.setBackground(new Color(240, 242, 245));
+        mainPanel.setBackground(BG_COLOR);
 
         // 标题面板
         JPanel titlePanel = createTitlePanel();
@@ -58,7 +62,7 @@ public class MainMenu extends JFrame {
     private JPanel createTitlePanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(new Color(52, 152, 219));
+        panel.setBackground(PRIMARY_COLOR);
         panel.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
 
         // 游戏标题
@@ -70,7 +74,7 @@ public class MainMenu extends JFrame {
         // 副标题
         JLabel subtitleLabel = new JLabel("Gomoku Online Battle");
         subtitleLabel.setFont(new Font("Arial", Font.BOLD, 22));
-        subtitleLabel.setForeground(new Color(236, 240, 241));
+        subtitleLabel.setForeground(new Color(189, 195, 199));
         subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         panel.add(Box.createVerticalStrut(20));
@@ -87,72 +91,59 @@ public class MainMenu extends JFrame {
      */
     private JPanel createButtonPanel() {
         JPanel panel = new JPanel();
-        panel.setLayout(new GridBagLayout());
-        panel.setBackground(new Color(240, 242, 245));
+        panel.setLayout(new GridLayout(2, 2, 20, 20)); // 2x2网格，间距20
+        panel.setBackground(BG_COLOR);
         panel.setBorder(BorderFactory.createEmptyBorder(45, 60, 45, 60));
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(8, 0, 8, 0);
-
         // 联机对战按钮
-        startButton = createMenuButton("联机对战", new Color(46, 204, 113));
+        startButton = createMenuButton("联机对战");
         startButton.addActionListener(e -> startOnlineGame());
-        gbc.gridy = 0;
-        panel.add(startButton, gbc);
+        panel.add(startButton);
 
         // 本机对战按钮
-        JButton localButton = createMenuButton("本机对战", new Color(230, 126, 34));
+        JButton localButton = createMenuButton("本机对战");
         localButton.addActionListener(e -> startLocalGame());
-        gbc.gridy = 1;
-        panel.add(localButton, gbc);
-
-        // 游戏规则按钮
-        rulesButton = createMenuButton("游戏规则", new Color(52, 152, 219));
-        rulesButton.addActionListener(e -> showRules());
-        gbc.gridy = 2;
-        panel.add(rulesButton, gbc);
+        panel.add(localButton);
 
         // 关于按钮
-        aboutButton = createMenuButton("关于游戏", new Color(155, 89, 182));
+        aboutButton = createMenuButton("关于游戏");
         aboutButton.addActionListener(e -> showAbout());
-        gbc.gridy = 3;
-        panel.add(aboutButton, gbc);
+        panel.add(aboutButton);
 
         // 退出按钮
-        exitButton = createMenuButton("退出游戏", new Color(231, 76, 60));
+        exitButton = createMenuButton("退出游戏");
         exitButton.addActionListener(e -> exitGame());
-        gbc.gridy = 4;
-        panel.add(exitButton, gbc);
+        panel.add(exitButton);
 
         return panel;
     }
 
     /**
-     * 创建菜单按钮
+     * 创建菜单按钮 - 简洁白色风格
      */
-    private JButton createMenuButton(String text, Color color) {
+    private JButton createMenuButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("微软雅黑", Font.BOLD, 22));
-        button.setPreferredSize(new Dimension(350, 65));
-        button.setBackground(color);
-        button.setForeground(Color.WHITE);
+        button.setPreferredSize(new Dimension(230, 90));
+        button.setBackground(Color.WHITE);
+        button.setForeground(TEXT_DARK);
         button.setFocusPainted(false);
-        button.setBorderPainted(false);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 2),
+                BorderFactory.createEmptyBorder(10, 20, 10, 20)));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setOpaque(true);
 
-        // 鼠标悬停效果 - 更明显的变化
+        // 鼠标悬停效果 - 轻微变灰
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                button.setBackground(brighten(color));
+                button.setBackground(new Color(250, 250, 250));
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                button.setBackground(color);
+                button.setBackground(Color.WHITE);
             }
         });
 
@@ -160,21 +151,11 @@ public class MainMenu extends JFrame {
     }
 
     /**
-     * 使颜色变亮
-     */
-    private Color brighten(Color color) {
-        int r = Math.min(255, (int) (color.getRed() * 1.15));
-        int g = Math.min(255, (int) (color.getGreen() * 1.15));
-        int b = Math.min(255, (int) (color.getBlue() * 1.15));
-        return new Color(r, g, b);
-    }
-
-    /**
      * 创建底部信息面板
      */
     private JPanel createFooterPanel() {
         JPanel panel = new JPanel();
-        panel.setBackground(new Color(240, 242, 245));
+        panel.setBackground(BG_COLOR);
         panel.setBorder(BorderFactory.createEmptyBorder(12, 20, 15, 20));
 
         JLabel footerLabel = new JLabel("版本 v1.3 | 支持房间系统、联机对战、本机对战、观战等功能");
@@ -258,13 +239,13 @@ public class MainMenu extends JFrame {
     private void showRules() {
         String rules = "【五子棋游戏规则】\n\n" +
                 "1. 基本规则\n" +
-                "   • 棋盘大小：15×15\n" +
+                "   •棋盘大小：15×15\n" +
                 "   • 黑棋先手，白棋后手\n" +
                 "   • 轮流在棋盘交叉点落子\n\n" +
-                "2. 胜负判定\n" +
+                "2.胜负判定\n" +
                 "   • 横向、纵向或斜向连成5子获胜\n" +
                 "   • 严格5子连线（不含6子及以上）\n" +
-                "   • 棋盘下满无人获胜则平局\n\n" +
+                "   •棋盘下满无人获胜则平局\n\n" +
                 "3. 特色功能\n" +
                 "   • 支持多人联机对战\n" +
                 "   • 支持观战功能\n" +

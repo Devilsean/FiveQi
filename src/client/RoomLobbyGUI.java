@@ -28,6 +28,14 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
     private JTextArea roomListArea;
     private JScrollPane scrollPane;
 
+    // 统一配色方案
+    private static final Color PRIMARY_COLOR = new Color(52, 73, 94); // 深灰蓝
+    private static final Color ACCENT_COLOR = new Color(41, 128, 185); // 蓝色强调
+    private static final Color BG_COLOR = new Color(245, 247, 250); // 浅灰背景
+    private static final Color TEXT_DARK = new Color(44, 62, 80); // 深色文字
+    private static final Color BUTTON_HOVER = new Color(52, 152, 219); // 悬停色
+    private static final Color SECONDARY_BTN = new Color(127, 140, 141); // 次要按钮
+
     public RoomLobbyGUI(Client client, String username) {
         this.client = client;
         this.username = username;
@@ -49,12 +57,12 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(12, 12));
         setSize(650, 550);
-        getContentPane().setBackground(new Color(240, 242, 245));
+        getContentPane().setBackground(BG_COLOR);
 
-        // 顶部欢迎面板 - 现代化设计
+        // 顶部欢迎面板
         JPanel topPanel = new JPanel(new BorderLayout(10, 10));
         topPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 15, 20));
-        topPanel.setBackground(new Color(52, 152, 219));
+        topPanel.setBackground(PRIMARY_COLOR);
 
         welcomeLabel = new JLabel("欢迎，" + username + "！", SwingConstants.CENTER);
         welcomeLabel.setFont(new Font("微软雅黑", Font.BOLD, 24));
@@ -63,14 +71,14 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
 
         add(topPanel, BorderLayout.NORTH);
 
-        // 中间房间列表面板 - 优化设计
+        // 中间房间列表面板
         JPanel centerPanel = new JPanel(new BorderLayout(8, 8));
-        centerPanel.setBackground(new Color(240, 242, 245));
+        centerPanel.setBackground(BG_COLOR);
         centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
         JLabel listLabel = new JLabel("当前房间列表");
         listLabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        listLabel.setForeground(new Color(52, 73, 94));
+        listLabel.setForeground(TEXT_DARK);
         centerPanel.add(listLabel, BorderLayout.NORTH);
 
         roomListArea = new JTextArea();
@@ -90,38 +98,38 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
 
         add(centerPanel, BorderLayout.CENTER);
 
-        // 底部按钮面板 - 优化布局
+        // 底部按钮面板
         JPanel bottomPanel = new JPanel(new GridLayout(3, 2, 12, 12));
-        bottomPanel.setBackground(new Color(240, 242, 245));
+        bottomPanel.setBackground(BG_COLOR);
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
         // 创建房间按钮
-        createRoomButton = createStyledButton("创建房间", new Color(46, 204, 113));
+        createRoomButton = createStyledButton("创建房间");
         createRoomButton.addActionListener(e -> createRoom());
         bottomPanel.add(createRoomButton);
 
         // 快速加入按钮
-        quickJoinButton = createStyledButton("快速加入", new Color(52, 152, 219));
+        quickJoinButton = createStyledButton("快速加入");
         quickJoinButton.addActionListener(e -> quickJoin());
         bottomPanel.add(quickJoinButton);
 
         // 输入ID加入按钮
-        joinByIdButton = createStyledButton("输入ID加入", new Color(155, 89, 182));
+        joinByIdButton = createStyledButton("输入ID加入");
         joinByIdButton.addActionListener(e -> joinById());
         bottomPanel.add(joinByIdButton);
 
         // 刷新列表按钮
-        refreshButton = createStyledButton("刷新列表", new Color(241, 196, 15));
+        refreshButton = createStyledButton("刷新列表");
         refreshButton.addActionListener(e -> requestRoomList());
         bottomPanel.add(refreshButton);
 
         // 观战按钮
-        JButton spectateButton = createStyledButton("观战房间", new Color(230, 126, 34));
+        JButton spectateButton = createStyledButton("观战房间");
         spectateButton.addActionListener(e -> spectateRoom());
         bottomPanel.add(spectateButton);
 
         // 退出登录按钮
-        logoutButton = createStyledButton("退出登录", new Color(231, 76, 60));
+        logoutButton = createStyledButton("退出登录");
         logoutButton.addActionListener(e -> logout());
         bottomPanel.add(logoutButton);
 
@@ -140,43 +148,35 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
     }
 
     /**
-     * 创建样式化按钮
+     * 创建样式化按钮 - 简洁白色风格
      */
-    private JButton createStyledButton(String text, Color bgColor) {
+    private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("微软雅黑", Font.BOLD, 15));
-        button.setBackground(bgColor);
-        button.setForeground(Color.WHITE);
+        button.setBackground(Color.WHITE);
+        button.setForeground(TEXT_DARK);
         button.setFocusPainted(false);
-        button.setBorderPainted(false);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 2),
+                BorderFactory.createEmptyBorder(10, 20, 10, 20)));
         button.setOpaque(true);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setPreferredSize(new Dimension(0, 50));
 
-        // 鼠标悬停效果 - 更明显
+        // 鼠标悬停效果 - 轻微变灰
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                button.setBackground(brighten(bgColor));
+                button.setBackground(new Color(250, 250, 250));
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                button.setBackground(bgColor);
+                button.setBackground(Color.WHITE);
             }
         });
 
         return button;
-    }
-
-    /**
-     * 使颜色变亮
-     */
-    private Color brighten(Color color) {
-        int r = Math.min(255, (int) (color.getRed() * 1.15));
-        int g = Math.min(255, (int) (color.getGreen() * 1.15));
-        int b = Math.min(255, (int) (color.getBlue() * 1.15));
-        return new Color(r, g, b);
     }
 
     /**
@@ -299,7 +299,6 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
     public void waitingForOpponent(String roomId) {
         SwingUtilities.invokeLater(() -> {
             welcomeLabel.setText("房间 " + roomId + " 已创建，等待对手加入...");
-            welcomeLabel.setForeground(new Color(46, 204, 113));
         });
     }
 
