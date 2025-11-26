@@ -1,0 +1,13 @@
+# -------------- Linux 脚本：强制 LF 换行符 --------------
+*.sh text eol=lf
+# （可选）如果有 Linux 其他可执行脚本（比如 .bash），也可以加上
+*.bash text eol=lf
+
+# -------------- Windows 脚本：强制 CRLF 换行符 --------------
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# -------------- 其他文本文件（比如 Java、配置文件）：自动适配系统（可选） --------------
+# 非脚本文件（.java、.xml、.properties 等），保持 Git 默认转换（仓库内 LF，检出时适配系统）
+# 如果你想让这些文件也统一 LF，可改成：* text eol=lf（根据团队习惯选择）
+* text=auto
