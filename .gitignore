@@ -24,8 +24,12 @@ out/
 .DS_Store
 Thumbs.db
 
-# 日志文件
+# 日志文件和目录
 *.log
+logs/
+
+# 服务器运行时文件
+server.pid
 
 # 临时文件
 *.tmp

@@ -1,0 +1,20 @@
+[Unit]
+Description=FiveQi Gobang Game Server
+After=network.target
+
+[Service]
+Type=simple
+User=nobody
+WorkingDirectory=/path/to/FiveQi
+ExecStart=/usr/bin/java -cp bin server.Server
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/path/to/FiveQi/logs/server.log
+StandardError=append:/path/to/FiveQi/logs/server.log
+
+#安全设置
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
