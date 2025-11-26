@@ -47,45 +47,53 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
     private void initComponents() {
         setTitle("五子棋大厅 - " + username);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout(10, 10));
-        setSize(600, 500);
+        setLayout(new BorderLayout(12, 12));
+        setSize(650, 550);
+        getContentPane().setBackground(new Color(240, 242, 245));
 
-        // 顶部欢迎面板
+        // 顶部欢迎面板 - 现代化设计
         JPanel topPanel = new JPanel(new BorderLayout(10, 10));
-        topPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 10, 15));
-        topPanel.setBackground(new Color(70, 130, 180));
+        topPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 15, 20));
+        topPanel.setBackground(new Color(52, 152, 219));
 
         welcomeLabel = new JLabel("欢迎，" + username + "！", SwingConstants.CENTER);
-        welcomeLabel.setFont(new Font("微软雅黑", Font.BOLD, 20));
+        welcomeLabel.setFont(new Font("微软雅黑", Font.BOLD, 24));
         welcomeLabel.setForeground(Color.WHITE);
         topPanel.add(welcomeLabel, BorderLayout.CENTER);
 
         add(topPanel, BorderLayout.NORTH);
 
-        // 中间房间列表面板
-        JPanel centerPanel = new JPanel(new BorderLayout(5, 5));
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        // 中间房间列表面板 - 优化设计
+        JPanel centerPanel = new JPanel(new BorderLayout(8, 8));
+        centerPanel.setBackground(new Color(240, 242, 245));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        JLabel listLabel = new JLabel("当前房间列表：");
-        listLabel.setFont(new Font("微软雅黑", Font.BOLD, 14));
+        JLabel listLabel = new JLabel("当前房间列表");
+        listLabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
+        listLabel.setForeground(new Color(52, 73, 94));
         centerPanel.add(listLabel, BorderLayout.NORTH);
 
         roomListArea = new JTextArea();
         roomListArea.setEditable(false);
-        roomListArea.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        roomListArea.setFont(new Font("微软雅黑", Font.PLAIN, 13));
         roomListArea.setLineWrap(true);
         roomListArea.setWrapStyleWord(true);
         roomListArea.setText("正在加载房间列表...");
+        roomListArea.setBackground(Color.WHITE);
+        roomListArea.setForeground(new Color(60, 60, 60));
+        roomListArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         scrollPane = new JScrollPane(roomListArea);
-        scrollPane.setPreferredSize(new Dimension(0, 200));
+        scrollPane.setPreferredSize(new Dimension(0, 220));
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
         centerPanel.add(scrollPane, BorderLayout.CENTER);
 
         add(centerPanel, BorderLayout.CENTER);
 
-        // 底部按钮面板
-        JPanel bottomPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 15, 15));
+        // 底部按钮面板 - 优化布局
+        JPanel bottomPanel = new JPanel(new GridLayout(3, 2, 12, 12));
+        bottomPanel.setBackground(new Color(240, 242, 245));
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
         // 创建房间按钮
         createRoomButton = createStyledButton("创建房间", new Color(46, 204, 113));
@@ -136,19 +144,20 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
      */
     private JButton createStyledButton(String text, Color bgColor) {
         JButton button = new JButton(text);
-        button.setFont(new Font("微软雅黑", Font.BOLD, 14));
+        button.setFont(new Font("微软雅黑", Font.BOLD, 15));
         button.setBackground(bgColor);
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setOpaque(true);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setPreferredSize(new Dimension(0, 50));
 
-        // 鼠标悬停效果
+        // 鼠标悬停效果 - 更明显
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                button.setBackground(bgColor.brighter());
+                button.setBackground(brighten(bgColor));
             }
 
             @Override
@@ -158,6 +167,16 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
         });
 
         return button;
+    }
+
+    /**
+     * 使颜色变亮
+     */
+    private Color brighten(Color color) {
+        int r = Math.min(255, (int) (color.getRed() * 1.15));
+        int g = Math.min(255, (int) (color.getGreen() * 1.15));
+        int b = Math.min(255, (int) (color.getBlue() * 1.15));
+        return new Color(r, g, b);
     }
 
     /**
