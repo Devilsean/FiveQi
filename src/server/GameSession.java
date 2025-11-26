@@ -250,9 +250,13 @@ public class GameSession {
         battleInviter = null;
         currentTurn = Protocol.BLACK;
 
-        // 棋盘在游戏结束时已重置，这里不需要再次重置
+        // 重置棋盘（清空上一局的棋子）
+        chessRule.reset();
 
-        // 通知所有成员对战开始
+        // 先通知客户端清空棋盘
+        broadcastToAll(Protocol.buildMessage(Protocol.BOARD_RESET));
+
+        // 然后通知对战开始
         broadcastToAll(Protocol.buildMessage(Protocol.BATTLE_START));
         broadcastSystem("对战开始！黑棋先手：" + blackSeat.getUsername());
     }
@@ -353,7 +357,7 @@ public class GameSession {
 
     /**
      * 处理游戏结束
-     * 游戏结束后重置棋盘，但保持席位不变，允许玩家继续对战或换人
+     * 游戏结束后保留棋盘供复盘，只在新对战开始时才重置
      */
     private void handleGameEnd(String winnerColor, String reason) {
         gameOver = true;
@@ -363,16 +367,12 @@ public class GameSession {
         // 广播游戏结束
         broadcastGameOver(winnerColor, reason);
 
-        // 重置棋盘
-        chessRule.reset();
-        currentTurn = Protocol.BLACK;
+        // 不重置棋盘，保留供复盘
+        // chessRule.reset() 将在 startBattle() 中调用
 
-        // 通知所有玩家棋盘已清空（发送棋盘重置消息）
-        broadcastToAll(Protocol.buildMessage(Protocol.BOARD_RESET));
+        broadcastSystem("游戏结束。棋盘保留供复盘，黑白席玩家可以发起新的对战邀请。");
 
-        broadcastSystem("游戏结束，棋盘已重置。黑白席玩家可以发起新的对战邀请。");
-
-        System.out.println("房间 " + roomId + " 游戏结束，棋盘已重置");
+        System.out.println("房间 " + roomId + " 游戏结束，棋盘保留供复盘");
     }
 
     /**

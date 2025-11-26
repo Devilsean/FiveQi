@@ -523,27 +523,31 @@ public class GameGUI extends JFrame implements NetworkHandler {
         }
 
         addSystemMessage("=== " + message + " ===");
+        addSystemMessage(">>> 棋盘保留供复盘，可重新发起对战。");
 
-        // 不弹出对话框，也不退出房间
-        // 玩家保持在原来的席位上，可以选择继续对战或离席
-        // 棋盘会在收到BOARD_RESET消息后自动重置
+        // 弹窗通知游戏结果
+        final String finalMessage = message;
+        SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(this, finalMessage, "游戏结束", JOptionPane.INFORMATION_MESSAGE);
+            updateButtons();
+        });
     }
 
     @Override
     public void onBoardReset() {
-        // 收到服务器的棋盘重置消息
+        // 收到服务器的棋盘重置消息（新对战开始前）
         System.out.println("DEBUG GameGUI.onBoardReset: 收到棋盘重置消息");
 
         SwingUtilities.invokeLater(() -> {
-            // 重置棋盘
-            initBoard();
+            // 只重置棋盘数据，不改变游戏状态
+            board = new int[Protocol.BOARD_SIZE][Protocol.BOARD_SIZE];
+            previewStone = null;
+            // 注意：不重置 gameStarted，因为对战即将开始
+
             boardPanel.repaint();
 
-            // 更新按钮状态（游戏结束后可以重新发起对战）
-            updateButtons();
-
-            addSystemMessage("=== 棋盘已重置，可以发起新的对战 ===");
-            System.out.println("DEBUG: 棋盘已重置");
+            addSystemMessage("=== 棋盘已清空，准备新对战 ===");
+            System.out.println("DEBUG: 棋盘已重置，gameStarted=" + gameStarted);
         });
     }
 
