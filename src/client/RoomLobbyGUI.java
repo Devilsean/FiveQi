@@ -464,10 +464,13 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
 
         if (result == JOptionPane.YES_OPTION) {
             stopAutoRefresh();
+            // 先关闭窗口，避免接收后续的服务器消息
+            dispose();
+            // 断开连接
             if (client != null && client.isConnected()) {
                 client.disconnectCompletely();
             }
-            dispose();
+            // 返回主菜单
             SwingUtilities.invokeLater(() -> new MainMenu());
         }
     }
@@ -556,6 +559,10 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
 
     @Override
     public void onError(String error) {
+        // 忽略"您不在任何房间中"的错误（退出登录时的正常响应）
+        if (error.contains("您不在任何房间中")) {
+            return;
+        }
         showMessage("错误: " + error, "错误", JOptionPane.ERROR_MESSAGE);
     }
 

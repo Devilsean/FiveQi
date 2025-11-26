@@ -505,13 +505,13 @@ public class GameGUI extends JFrame implements NetworkHandler {
                 "确认", JOptionPane.YES_NO_OPTION);
 
         if (result == JOptionPane.YES_OPTION) {
+            // 先关闭当前窗口，避免接收后续的服务器消息
+            dispose();
+
             // 发送退出房间消息（但不断开连接）
             if (client != null && client.isConnected()) {
                 client.sendMessage(Protocol.buildMessage(Protocol.QUIT));
             }
-
-            // 关闭当前窗口
-            dispose();
 
             // 返回房间大厅
             if (client != null && myUsername != null) {
@@ -773,6 +773,10 @@ public class GameGUI extends JFrame implements NetworkHandler {
 
     @Override
     public void onError(String error) {
+        // 忽略"您不在任何房间中"的错误（退出房间时的正常响应）
+        if (error.contains("您不在任何房间中")) {
+            return;
+        }
         addSystemMessage("!!! 错误: " + error);
     }
 
