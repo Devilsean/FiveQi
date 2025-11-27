@@ -30,10 +30,10 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
     private JScrollPane scrollPane;
     private Timer autoRefreshTimer; // 自动刷新定时器
 
-    // 统一配色方案 - 黑白配
-    private static final Color PRIMARY_COLOR = new Color(52, 73, 94); // 深灰蓝
-    private static final Color BG_COLOR = new Color(245, 247, 250); // 浅灰背景
-    private static final Color TEXT_DARK = new Color(44, 62, 80); // 深色文字
+    // 统一配色方案 - 使用Theme类
+    // private static final Color PRIMARY_COLOR = new Color(52, 73, 94); // Removed
+    // private static final Color BG_COLOR = new Color(245, 247, 250); // Removed
+    // private static final Color TEXT_DARK = new Color(44, 62, 80); // Removed
 
     public RoomLobbyGUI(Client client, String username) {
         this.client = client;
@@ -56,78 +56,101 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
         setTitle("五子棋大厅 - " + username);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(0, 0));
-        setSize(750, 600);
-        getContentPane().setBackground(BG_COLOR);
+        setSize(900, 650); // 稍微加大尺寸
+        getContentPane().setBackground(Theme.BG_COLOR);
 
         // 顶部欢迎面板
         JPanel topPanel = new JPanel(new BorderLayout(10, 10));
-        topPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 15, 20));
-        topPanel.setBackground(PRIMARY_COLOR);
+        topPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        topPanel.setBackground(Theme.PRIMARY_COLOR);
 
-        welcomeLabel = new JLabel("欢迎，" + username + "！", SwingConstants.CENTER);
-        welcomeLabel.setFont(new Font("微软雅黑", Font.BOLD, 24));
+        welcomeLabel = new JLabel("欢迎，" + username + "！", SwingConstants.LEFT);
+        welcomeLabel.setFont(Theme.TITLE_FONT);
         welcomeLabel.setForeground(Color.WHITE);
         topPanel.add(welcomeLabel, BorderLayout.CENTER);
+
+        // 顶部右侧添加一些装饰或时间（可选），暂时留空或放Logo
+        JLabel logoLabel = new JLabel("FiveQi Online");
+        logoLabel.setFont(Theme.SUBTITLE_FONT);
+        logoLabel.setForeground(new Color(255, 255, 255, 200));
+        topPanel.add(logoLabel, BorderLayout.EAST);
 
         add(topPanel, BorderLayout.NORTH);
 
         // 中间房间列表区域
-        JPanel centerPanel = new JPanel(new BorderLayout(0, 0));
-        centerPanel.setBackground(BG_COLOR);
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        JPanel centerPanel = new JPanel(new BorderLayout(0, 15));
+        centerPanel.setBackground(Theme.BG_COLOR);
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 10, 30));
 
         // 统计信息导航栏
         JPanel statsPanel = createStatsPanel();
         centerPanel.add(statsPanel, BorderLayout.NORTH);
 
+        // 房间列表容器（包含标题和列表）
+        JPanel listContainer = new JPanel(new BorderLayout(0, 0));
+        listContainer.setBackground(Color.WHITE);
+        listContainer.setBorder(Theme.createShadowBorder()); // 使用阴影边框
+
         // 房间列表标题行
         JPanel headerPanel = createHeaderPanel();
+        listContainer.add(headerPanel, BorderLayout.NORTH);
 
         // 房间列表内容区域
         roomListPanel = new JPanel();
         roomListPanel.setLayout(new BoxLayout(roomListPanel, BoxLayout.Y_AXIS));
         roomListPanel.setBackground(Color.WHITE);
-        roomListPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        // roomListPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        // 添加滚动面板
-        JPanel listContainer = new JPanel(new BorderLayout(0, 0));
-        listContainer.setBackground(Color.WHITE);
-        listContainer.add(headerPanel, BorderLayout.NORTH);
-        listContainer.add(roomListPanel, BorderLayout.CENTER);
-
-        scrollPane = new JScrollPane(listContainer);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+        scrollPane = new JScrollPane(roomListPanel);
+        scrollPane.setBorder(null); // 移除JScrollPane默认边框，使用外部容器的边框
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        centerPanel.add(scrollPane, BorderLayout.CENTER);
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        listContainer.add(scrollPane, BorderLayout.CENTER);
 
+        centerPanel.add(listContainer, BorderLayout.CENTER);
         add(centerPanel, BorderLayout.CENTER);
 
         // 底部按钮面板
-        JPanel bottomPanel = new JPanel(new GridLayout(2, 2, 12, 12));
-        bottomPanel.setBackground(BG_COLOR);
-        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
-
-        // 创建房间按钮
-        createRoomButton = createStyledButton("创建房间");
-        createRoomButton.addActionListener(e -> createRoom());
-        bottomPanel.add(createRoomButton);
-
-        // 通过房间ID加入按钮（放在创建房间右侧）
-        JButton joinByIdButton = createStyledButton("查找房间");
-        joinByIdButton.addActionListener(e -> joinByIdDialog());
-        bottomPanel.add(joinByIdButton);
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 20));
+        bottomPanel.setBackground(Theme.BG_COLOR);
+        // bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
         // 刷新列表按钮
-        refreshButton = createStyledButton("刷新列表");
+        refreshButton = Theme.createSecondaryButton("刷新列表");
+        refreshButton.setPreferredSize(new Dimension(120, 45));
         refreshButton.addActionListener(e -> requestRoomList());
         bottomPanel.add(refreshButton);
 
-        // 退出登录按钮
-        logoutButton = createStyledButton("退出登录");
-        logoutButton.addActionListener(e -> logout());
-        bottomPanel.add(logoutButton);
+        // 通过房间ID加入按钮
+        JButton joinByIdButton = Theme.createSecondaryButton("查找房间");
+        joinByIdButton.setPreferredSize(new Dimension(120, 45));
+        joinByIdButton.addActionListener(e -> joinByIdDialog());
+        bottomPanel.add(joinByIdButton);
 
-        add(bottomPanel, BorderLayout.SOUTH);
+        // 创建房间按钮
+        createRoomButton = Theme.createPrimaryButton("创建房间");
+        createRoomButton.setPreferredSize(new Dimension(140, 45));
+        createRoomButton.addActionListener(e -> createRoom());
+        bottomPanel.add(createRoomButton);
+
+        // 退出登录按钮 (放在左下角或单独处理，这里为了布局简单放在右侧最左)
+        logoutButton = Theme.createDangerButton("退出登录");
+        logoutButton.setPreferredSize(new Dimension(120, 45));
+        logoutButton.addActionListener(e -> logout());
+
+        // 使用BorderLayout将退出按钮放左边
+        JPanel footerContainer = new JPanel(new BorderLayout());
+        footerContainer.setBackground(Theme.BG_COLOR);
+        footerContainer.setBorder(BorderFactory.createEmptyBorder(0, 30, 20, 30));
+
+        JPanel leftFooter = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 20));
+        leftFooter.setBackground(Theme.BG_COLOR);
+        leftFooter.add(logoutButton);
+
+        footerContainer.add(leftFooter, BorderLayout.WEST);
+        footerContainer.add(bottomPanel, BorderLayout.CENTER); // bottomPanel已经是FlowLayout.RIGHT
+
+        add(footerContainer, BorderLayout.SOUTH);
 
         // 窗口关闭事件
         addWindowListener(new WindowAdapter() {
@@ -146,29 +169,26 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
      * 创建统计信息面板
      */
     private JPanel createStatsPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-        panel.setBackground(new Color(236, 240, 244));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(8, 10, 8, 10)));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Theme.BG_COLOR);
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
         statsLabel = new JLabel("房间总数: 0 | 正在加载...");
-        statsLabel.setFont(new Font("微软雅黑", Font.BOLD, 13));
-        statsLabel.setForeground(TEXT_DARK);
-        panel.add(statsLabel);
+        statsLabel.setFont(Theme.NORMAL_FONT);
+        statsLabel.setForeground(Theme.TEXT_COLOR);
+        panel.add(statsLabel, BorderLayout.WEST);
 
-        // 快速加入按钮（放在房间总数右侧）
-        JButton quickJoinBtn = new JButton("快速加入");
+        // 快速加入按钮
+        JButton quickJoinBtn = Theme.createPrimaryButton("快速加入");
+        quickJoinBtn.setPreferredSize(new Dimension(100, 35));
         quickJoinBtn.setFont(new Font("微软雅黑", Font.BOLD, 12));
-        quickJoinBtn.setBackground(Color.WHITE);
-        quickJoinBtn.setForeground(TEXT_DARK);
-        quickJoinBtn.setFocusPainted(false);
-        quickJoinBtn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(5, 15, 5, 15)));
-        quickJoinBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         quickJoinBtn.addActionListener(e -> quickJoin());
-        panel.add(quickJoinBtn);
+
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        rightPanel.setBackground(Theme.BG_COLOR);
+        rightPanel.add(quickJoinBtn);
+
+        panel.add(rightPanel, BorderLayout.EAST);
 
         return panel;
     }
@@ -180,54 +200,23 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
         JPanel panel = new JPanel(new GridLayout(1, 4, 10, 0));
         panel.setBackground(new Color(248, 249, 250));
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(220, 220, 220)),
-                BorderFactory.createEmptyBorder(10, 15, 10, 15)));
+                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
+                BorderFactory.createEmptyBorder(12, 20, 12, 20)));
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
         String[] headers = { "房间ID", "状态", "人数", "操作" };
-        int[] widths = { 15, 40, 15, 15 }; // 百分比权重
 
         for (int i = 0; i < headers.length; i++) {
             JLabel label = new JLabel(headers[i], SwingConstants.CENTER);
-            label.setFont(new Font("微软雅黑", Font.BOLD, 13));
-            label.setForeground(TEXT_DARK);
+            label.setFont(Theme.BOLD_FONT);
+            label.setForeground(Theme.TEXT_COLOR);
             panel.add(label);
         }
 
         return panel;
     }
 
-    /**
-     * 创建样式化按钮 - 简洁白色风格
-     */
-    private JButton createStyledButton(String text) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("微软雅黑", Font.BOLD, 15));
-        button.setBackground(Color.WHITE);
-        button.setForeground(TEXT_DARK);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 2),
-                BorderFactory.createEmptyBorder(10, 20, 10, 20)));
-        button.setOpaque(true);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setPreferredSize(new Dimension(0, 50));
-
-        // 鼠标悬停效果 - 轻微变灰
-        button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                button.setBackground(new Color(250, 250, 250));
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                button.setBackground(Color.WHITE);
-            }
-        });
-
-        return button;
-    }
+    // Removed createStyledButton as we use Theme methods now
 
     /**
      * 创建房间行面板
@@ -235,54 +224,40 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
     private JPanel createRoomPanel(String roomId, String status, int memberCount) {
         JPanel panel = new JPanel(new GridLayout(1, 4, 10, 0));
         panel.setBackground(Color.WHITE);
+        // 使用更淡的分割线
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(240, 240, 240)),
-                BorderFactory.createEmptyBorder(12, 15, 12, 15)));
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
+                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(245, 245, 245)),
+                BorderFactory.createEmptyBorder(15, 20, 15, 20)));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
 
         // 房间ID
         JLabel idLabel = new JLabel(roomId, SwingConstants.CENTER);
-        idLabel.setFont(new Font("微软雅黑", Font.BOLD, 14));
-        idLabel.setForeground(PRIMARY_COLOR);
+        idLabel.setFont(Theme.BOLD_FONT);
+        idLabel.setForeground(Theme.PRIMARY_COLOR);
         panel.add(idLabel);
 
         // 状态
         JLabel statusLabel = new JLabel(status, SwingConstants.CENTER);
-        statusLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        statusLabel.setForeground(new Color(100, 100, 100));
+        statusLabel.setFont(Theme.NORMAL_FONT);
+
+        if ("游戏进行中".equals(status) || "Playing".equalsIgnoreCase(status)) {
+            statusLabel.setForeground(Theme.DANGER_COLOR);
+        } else {
+            statusLabel.setForeground(Theme.SECONDARY_COLOR); // Green for waiting
+        }
         panel.add(statusLabel);
 
         // 人数
-        JLabel countLabel = new JLabel(memberCount + " 人", SwingConstants.CENTER);
-        countLabel.setFont(new Font("微软雅黑", Font.PLAIN, 13));
-        countLabel.setForeground(new Color(80, 80, 80));
+        JLabel countLabel = new JLabel(memberCount + " / 2", SwingConstants.CENTER);
+        countLabel.setFont(Theme.NORMAL_FONT);
+        countLabel.setForeground(Theme.TEXT_SECONDARY);
         panel.add(countLabel);
 
         // 加入按钮
-        JButton joinBtn = new JButton("加入");
+        JButton joinBtn = Theme.createSecondaryButton("加入");
+        joinBtn.setPreferredSize(new Dimension(80, 30));
         joinBtn.setFont(new Font("微软雅黑", Font.BOLD, 12));
-        joinBtn.setBackground(Color.WHITE);
-        joinBtn.setForeground(TEXT_DARK);
-        joinBtn.setFocusPainted(false);
-        joinBtn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(5, 15, 5, 15)));
-        joinBtn.setOpaque(true);
-        joinBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         joinBtn.addActionListener(e -> joinRoomById(roomId));
-
-        // 按钮悬停效果
-        joinBtn.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                joinBtn.setBackground(new Color(245, 245, 245));
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                joinBtn.setBackground(Color.WHITE);
-            }
-        });
 
         JPanel btnContainer = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         btnContainer.setBackground(Color.WHITE);

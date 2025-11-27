@@ -43,37 +43,54 @@ public class LocalGameGUI extends JFrame {
         setTitle("五子棋 - 本机对战");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
+        getContentPane().setBackground(Theme.BG_COLOR);
 
         // 创建棋盘面板
+        JPanel boardContainer = new JPanel(new BorderLayout());
+        boardContainer.setBackground(Theme.BG_COLOR);
+
         boardPanel = new ChessBoardPanel();
         boardPanel.setPreferredSize(new Dimension(
                 Protocol.BOARD_SIZE * CELL_SIZE + BOARD_MARGIN * 2,
                 Protocol.BOARD_SIZE * CELL_SIZE + BOARD_MARGIN * 2));
-        add(boardPanel, BorderLayout.CENTER);
+        boardPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Theme.BORDER_COLOR.darker(), 2),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        boardContainer.add(boardPanel, BorderLayout.CENTER);
+        add(boardContainer, BorderLayout.CENTER);
 
         // 创建右侧面板
         JPanel rightPanel = new JPanel(new BorderLayout(5, 5));
         rightPanel.setPreferredSize(new Dimension(250, 0));
+        rightPanel.setBackground(Theme.BG_COLOR);
         rightPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // 状态标签
         statusLabel = new JLabel("黑棋先手", SwingConstants.CENTER);
-        statusLabel.setFont(new Font("微软雅黑", Font.BOLD, 18));
-        statusLabel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.GRAY),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+        statusLabel.setFont(Theme.H2_FONT);
+        statusLabel.setForeground(Theme.TEXT_COLOR);
+        statusLabel.setOpaque(true);
+        statusLabel.setBackground(Color.WHITE);
+        statusLabel.setBorder(Theme.createShadowBorder());
         rightPanel.add(statusLabel, BorderLayout.NORTH);
 
         // 信息面板
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-        infoPanel.setBorder(BorderFactory.createTitledBorder("游戏信息"));
+        infoPanel.setBackground(Theme.BG_COLOR);
+        infoPanel.setBorder(BorderFactory.createTitledBorder(
+                null, "游戏信息",
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+                javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                Theme.BOLD_FONT, Theme.TEXT_COLOR));
 
         JTextArea infoArea = new JTextArea();
         infoArea.setEditable(false);
         infoArea.setLineWrap(true);
         infoArea.setWrapStyleWord(true);
-        infoArea.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        infoArea.setFont(Theme.SMALL_FONT);
+        infoArea.setBackground(Theme.READONLY_BG);
+        infoArea.setForeground(Theme.TEXT_COLOR);
         infoArea.setText(
                 "本机对战模式\n\n" +
                         "规则：\n" +
@@ -83,23 +100,24 @@ public class LocalGameGUI extends JFrame {
                         "操作：\n" +
                         "• 点击棋盘落子\n" +
                         "• 鼠标悬停预览\n");
+        infoArea.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         JScrollPane scrollPane = new JScrollPane(infoArea);
         scrollPane.setPreferredSize(new Dimension(0, 200));
+        scrollPane.setBorder(null);
         infoPanel.add(scrollPane);
 
         rightPanel.add(infoPanel, BorderLayout.CENTER);
 
         // 按钮面板
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 5, 5));
+        buttonPanel.setBackground(Theme.BG_COLOR);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
-        restartButton = new JButton("重新开始");
-        restartButton.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        restartButton = Theme.createPrimaryButton("重新开始");
         restartButton.addActionListener(e -> restartGame());
 
-        backButton = new JButton("返回主菜单");
-        backButton.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        backButton = Theme.createSecondaryButton("返回主菜单");
         backButton.addActionListener(e -> backToMenu());
 
         buttonPanel.add(restartButton);
@@ -241,7 +259,7 @@ public class LocalGameGUI extends JFrame {
     private class ChessBoardPanel extends JPanel {
 
         public ChessBoardPanel() {
-            setBackground(new Color(220, 179, 92));
+            setOpaque(true);
 
             // 添加鼠标监听
             addMouseListener(new MouseAdapter() {
@@ -265,6 +283,9 @@ public class LocalGameGUI extends JFrame {
             Graphics2D g2d = (Graphics2D) g;
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
+            // 绘制棋盘背景
+            Theme.drawBoardBackground(g2d, getWidth(), getHeight());
+
             // 绘制棋盘网格
             drawGrid(g2d);
 
@@ -281,7 +302,7 @@ public class LocalGameGUI extends JFrame {
          * 绘制棋盘网格
          */
         private void drawGrid(Graphics2D g2d) {
-            g2d.setColor(Color.BLACK);
+            g2d.setColor(Theme.BOARD_LINE_COLOR);
             g2d.setStroke(new BasicStroke(1));
 
             for (int i = 0; i < Protocol.BOARD_SIZE; i++) {
@@ -297,6 +318,7 @@ public class LocalGameGUI extends JFrame {
             }
 
             // 绘制天元和星位
+            g2d.setColor(Theme.BOARD_LINE_COLOR);
             int[] starPoints = { 3, 7, 11 };
             for (int i : starPoints) {
                 for (int j : starPoints) {
@@ -324,44 +346,24 @@ public class LocalGameGUI extends JFrame {
          * 绘制单个棋子
          */
         private void drawStone(Graphics2D g2d, int x, int y, boolean isBlack) {
-            int px = BOARD_MARGIN + x * CELL_SIZE;
-            int py = BOARD_MARGIN + y * CELL_SIZE;
-
-            if (isBlack) {
-                g2d.setColor(Color.BLACK);
-            } else {
-                g2d.setColor(Color.WHITE);
-            }
-
-            g2d.fillOval(px - STONE_RADIUS, py - STONE_RADIUS,
-                    STONE_RADIUS * 2, STONE_RADIUS * 2);
-
-            g2d.setColor(Color.BLACK);
-            g2d.drawOval(px - STONE_RADIUS, py - STONE_RADIUS,
-                    STONE_RADIUS * 2, STONE_RADIUS * 2);
+            int px = BOARD_MARGIN + x * CELL_SIZE - STONE_RADIUS;
+            int py = BOARD_MARGIN + y * CELL_SIZE - STONE_RADIUS;
+            Theme.drawStone(g2d, px, py, STONE_RADIUS, isBlack);
         }
 
         /**
          * 绘制预览棋子
          */
         private void drawPreviewStone(Graphics2D g2d, int x, int y) {
-            int px = BOARD_MARGIN + x * CELL_SIZE;
-            int py = BOARD_MARGIN + y * CELL_SIZE;
+            int px = BOARD_MARGIN + x * CELL_SIZE - STONE_RADIUS;
+            int py = BOARD_MARGIN + y * CELL_SIZE - STONE_RADIUS;
 
             boolean isBlack = currentTurn.equals(Protocol.BLACK);
 
-            if (isBlack) {
-                g2d.setColor(new Color(0, 0, 0, 100));
-            } else {
-                g2d.setColor(new Color(255, 255, 255, 150));
-            }
-
-            g2d.fillOval(px - STONE_RADIUS, py - STONE_RADIUS,
-                    STONE_RADIUS * 2, STONE_RADIUS * 2);
-
-            g2d.setColor(new Color(0, 0, 0, 100));
-            g2d.drawOval(px - STONE_RADIUS, py - STONE_RADIUS,
-                    STONE_RADIUS * 2, STONE_RADIUS * 2);
+            Composite originalComposite = g2d.getComposite();
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.6f));
+            Theme.drawStone(g2d, px, py, STONE_RADIUS, isBlack);
+            g2d.setComposite(originalComposite);
         }
 
         /**

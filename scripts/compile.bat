@@ -55,7 +55,7 @@ echo.
 
 REM Compile all Java files
 echo Compiling...
-javac -encoding UTF-8 -d bin -sourcepath src src\common\Protocol.java src\server\ChessRule.java src\server\ClientHandler.java src\server\GameSession.java src\server\Server.java src\client\Client.java src\client\GameGUI.java src\client\LocalGameGUI.java src\client\MainMenu.java src\client\NetworkHandler.java src\client\RoomLobbyGUI.java
+javac -encoding UTF-8 -d bin -sourcepath src src\common\Protocol.java src\server\ChessRule.java src\server\ClientHandler.java src\server\GameSession.java src\server\Server.java src\client\Client.java src\client\GameGUI.java src\client\LocalGameGUI.java src\client\MainMenu.java src\client\NetworkHandler.java src\client\RoomLobbyGUI.java src\client\Theme.java
 
 if %errorlevel% equ 0 (
     echo.
