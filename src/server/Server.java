@@ -41,10 +41,10 @@ public class Server {
             running = true;
             System.out.println("服务器启动成功，监听端口: " + port);
 
-            // 启动房间清理任务（每10秒检查一次）
+            // 启动房间清理任务（每1秒检查一次）
             cleanupScheduler.scheduleAtFixedRate(
                     this::cleanupEmptyRooms,
-                    10, 10, TimeUnit.SECONDS);
+                    1, 1, TimeUnit.SECONDS);
 
             // 接受客户端连接
             while (running) {
@@ -222,7 +222,7 @@ public class Server {
         GameSession session = gameSessions.get(roomId);
 
         if (session == null) {
-            joiner.sendMessage(Protocol.buildMessage(Protocol.ERROR, "房间不存在"));
+            // 不在这里发送错误消息，由调用方决定
             return false;
         }
 
@@ -246,7 +246,6 @@ public class Server {
             return true;
         }
 
-        joiner.sendMessage(Protocol.buildMessage(Protocol.ERROR, "当前没有可用房间，请创建新房间"));
         return false;
     }
 

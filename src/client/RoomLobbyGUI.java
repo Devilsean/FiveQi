@@ -4,7 +4,6 @@ import common.Protocol;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.Timer;
 
 /**
  * 房间大厅界面 - 可视化列表版本
@@ -307,7 +306,7 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
      * 通过ID加入房间对话框
      */
     private void joinByIdDialog() {
-        String roomId = JOptionPane.showInputDialog(this, "请输入房间ID:", "加入房间", JOptionPane.PLAIN_MESSAGE);
+        String roomId = CustomDialog.showInputDialog(this, "请输入房间ID:", "加入房间", CustomDialog.PLAIN_MESSAGE);
         if (roomId != null && !roomId.trim().isEmpty()) {
             joinRoomById(roomId.trim());
         }
@@ -405,7 +404,7 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
      */
     public void showMessage(String message, String title, int messageType) {
         SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(this, message, title, messageType);
+            CustomDialog.showMessageDialog(this, message, title, messageType);
         });
     }
 
@@ -432,12 +431,12 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
      * 退出登录
      */
     private void logout() {
-        int result = JOptionPane.showConfirmDialog(this,
+        int result = CustomDialog.showConfirmDialog(this,
                 "确定要退出登录吗？",
                 "确认",
-                JOptionPane.YES_NO_OPTION);
+                CustomDialog.YES_NO_OPTION);
 
-        if (result == JOptionPane.YES_OPTION) {
+        if (result == CustomDialog.YES_OPTION) {
             stopAutoRefresh();
             // 先关闭窗口，避免接收后续的服务器消息
             dispose();
@@ -534,11 +533,8 @@ public class RoomLobbyGUI extends JFrame implements NetworkHandler {
 
     @Override
     public void onError(String error) {
-        // 忽略"您不在任何房间中"的错误（退出登录时的正常响应）
-        if (error.contains("您不在任何房间中")) {
-            return;
-        }
-        showMessage("错误: " + error, "错误", JOptionPane.ERROR_MESSAGE);
+        // RoomLobbyGUI不显示错误弹窗，避免重复
+        System.err.println("RoomLobby收到错误: " + error);
     }
 
     @Override

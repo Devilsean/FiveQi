@@ -54,7 +54,7 @@ public class LocalGameGUI extends JFrame {
                 Protocol.BOARD_SIZE * CELL_SIZE + BOARD_MARGIN * 2,
                 Protocol.BOARD_SIZE * CELL_SIZE + BOARD_MARGIN * 2));
         boardPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Theme.BORDER_COLOR.darker(), 2),
+                BorderFactory.createLineBorder(new Color(180, 180, 180), 2),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         boardContainer.add(boardPanel, BorderLayout.CENTER);
         add(boardContainer, BorderLayout.CENTER);
@@ -89,7 +89,7 @@ public class LocalGameGUI extends JFrame {
         infoArea.setLineWrap(true);
         infoArea.setWrapStyleWord(true);
         infoArea.setFont(Theme.SMALL_FONT);
-        infoArea.setBackground(Theme.READONLY_BG);
+        infoArea.setBackground(new Color(250, 250, 250));
         infoArea.setForeground(Theme.TEXT_COLOR);
         infoArea.setText(
                 "本机对战模式\n\n" +
@@ -167,7 +167,7 @@ public class LocalGameGUI extends JFrame {
 
         // 检查位置是否为空
         if (!chessRule.isEmpty(x, y)) {
-            JOptionPane.showMessageDialog(this, "该位置已有棋子！", "提示", JOptionPane.WARNING_MESSAGE);
+            CustomDialog.showMessageDialog(this, "该位置已有棋子！", "提示", CustomDialog.WARNING_MESSAGE);
             return;
         }
 
@@ -185,14 +185,13 @@ public class LocalGameGUI extends JFrame {
                 statusLabel.setText(winner + " 获胜！");
 
                 SwingUtilities.invokeLater(() -> {
-                    int result = JOptionPane.showConfirmDialog(
+                    int result = CustomDialog.showConfirmDialog(
                             this,
                             winner + " 获胜！\n\n是否再来一局？",
                             "游戏结束",
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.INFORMATION_MESSAGE);
+                            CustomDialog.YES_NO_OPTION);
 
-                    if (result == JOptionPane.YES_OPTION) {
+                    if (result == CustomDialog.YES_OPTION) {
                         restartGame();
                     }
                 });
@@ -201,14 +200,13 @@ public class LocalGameGUI extends JFrame {
                 statusLabel.setText("平局！");
 
                 SwingUtilities.invokeLater(() -> {
-                    int result = JOptionPane.showConfirmDialog(
+                    int result = CustomDialog.showConfirmDialog(
                             this,
                             "平局！棋盘已下满。\n\n是否再来一局？",
                             "游戏结束",
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.INFORMATION_MESSAGE);
+                            CustomDialog.YES_NO_OPTION);
 
-                    if (result == JOptionPane.YES_OPTION) {
+                    if (result == CustomDialog.YES_OPTION) {
                         restartGame();
                     }
                 });
@@ -224,13 +222,13 @@ public class LocalGameGUI extends JFrame {
      * 重新开始游戏
      */
     private void restartGame() {
-        int result = JOptionPane.showConfirmDialog(
+        int result = CustomDialog.showConfirmDialog(
                 this,
                 "确定要重新开始吗？",
                 "确认",
-                JOptionPane.YES_NO_OPTION);
+                CustomDialog.YES_NO_OPTION);
 
-        if (result == JOptionPane.YES_OPTION) {
+        if (result == CustomDialog.YES_OPTION) {
             initGame();
         }
     }
@@ -239,13 +237,13 @@ public class LocalGameGUI extends JFrame {
      * 返回主菜单
      */
     private void backToMenu() {
-        int result = JOptionPane.showConfirmDialog(
+        int result = CustomDialog.showConfirmDialog(
                 this,
                 "确定要返回主菜单吗？",
                 "确认",
-                JOptionPane.YES_NO_OPTION);
+                CustomDialog.YES_NO_OPTION);
 
-        if (result == JOptionPane.YES_OPTION) {
+        if (result == CustomDialog.YES_OPTION) {
             dispose();
             SwingUtilities.invokeLater(() -> new MainMenu());
         }

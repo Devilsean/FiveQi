@@ -253,8 +253,16 @@ public class Client {
 
                 case Protocol.SEAT_UPDATE:
                     if (parts.length >= 4) {
-                        int spectatorCount = Integer.parseInt(parts[3]);
-                        handler.onSeatUpdate(parts[1], parts[2], spectatorCount);
+                        try {
+                            int spectatorCount = Integer.parseInt(parts[3]);
+                            handler.onSeatUpdate(parts[1], parts[2], spectatorCount);
+                        } catch (NumberFormatException e) {
+                            System.err.println("解析SEAT_UPDATE观战者数量失败: " + parts[3]);
+                            System.err.println("完整消息: " + message);
+                        }
+                    } else {
+                        System.err.println("SEAT_UPDATE消息格式错误，parts长度: " + parts.length);
+                        System.err.println("完整消息: " + message);
                     }
                     break;
 

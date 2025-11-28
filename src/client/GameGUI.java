@@ -2,6 +2,7 @@ package client;
 
 import common.Protocol;
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.HashMap;
@@ -26,15 +27,20 @@ public class GameGUI extends JFrame implements NetworkHandler {
     private Point previewStone; // 预览棋子位置
 
     // GUI组件
+    private CardLayout cardLayout;
+    private JPanel mainPanel; // 主面板，用于视图切换
     private ChessBoardPanel boardPanel;
     private JTextArea systemArea; // 系统消息区域
-    private JTextArea chatArea; // 聊天消息区域
+    private JTextPane chatArea; // 聊天消息区域
+    private StyledDocument chatDoc; // 聊天文档
     private JTextField chatInput;
     private JButton sendButton;
     private JLabel statusLabel;
     private JLabel seatStatusLabel; // 席位状态显示
     private JPanel buttonPanel;
     private Map<String, JButton> actionButtons;
+    private Map<String, String> playerRoles; // 玩家角色映射表
+    private long lastMessageTime = 0; // 上一条消息的时间戳
 
     // 常量
     private static final int CELL_SIZE = 40;
@@ -50,12 +56,12 @@ public class GameGUI extends JFrame implements NetworkHandler {
     // Removed
 
     /**
-     * 默认构造函数（用于独立启动，显示登录对话框）
+     * 默认构造函数（用于独立启动，显示登录界面）
      */
     public GameGUI() {
-        initComponents();
         initBoard();
-        showLoginDialog();
+        initComponents(true);
+        // 显示登录面板（已在initComponents中处理，默认显示login视图）
     }
 
     /**
@@ -68,12 +74,16 @@ public class GameGUI extends JFrame implements NetworkHandler {
         this.myUsername = username;
         this.roomId = roomId;
         this.myRole = Protocol.SPECTATOR; // 默认进入观战席
+        this.playerRoles = new HashMap<>(); // 初始化角色映射
 
         // 先初始化棋盘数据结构
         initBoard();
 
-        // 再初始化GUI组件
-        initComponents();
+        // 再初始化GUI组件（不显示登录界面）
+        initComponents(false);
+
+        // 切换到游戏面板
+        cardLayout.show(mainPanel, "game");
 
         // 设置NetworkHandler（此时RoomLobbyGUI已经获取了初始房间状态）
         client.setNetworkHandler(this);
@@ -94,14 +104,131 @@ public class GameGUI extends JFrame implements NetworkHandler {
         });
     }
 
+    private JPanel createLoginPanel() {
+        JPanel loginPanel = new JPanel(new BorderLayout());
+        loginPanel.setBackground(Theme.BG_COLOR);
+
+        // 顶部标题区域
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setBackground(Theme.PRIMARY_COLOR);
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(50, 20, 50, 20));
+
+        JLabel titleLabel = new JLabel("五子棋联机对战");
+        titleLabel.setFont(Theme.TITLE_FONT);
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel subtitleLabel = new JLabel("连接到服务器");
+        subtitleLabel.setFont(Theme.SUBTITLE_FONT);
+        subtitleLabel.setForeground(Theme.TEXT_LIGHT);
+        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        titlePanel.add(titleLabel);
+        titlePanel.add(Box.createVerticalStrut(15));
+        titlePanel.add(subtitleLabel);
+
+        loginPanel.add(titlePanel, BorderLayout.NORTH);
+
+        // 中间表单区域
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setBackground(Theme.BG_COLOR);
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 0, 10, 0);
+
+        // 创建输入字段
+        JTextField hostField = new JTextField("localhost");
+        hostField.setFont(Theme.NORMAL_FONT);
+        hostField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Theme.BORDER_COLOR, 1),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+
+        JTextField portField = new JTextField(String.valueOf(Protocol.DEFAULT_PORT));
+        portField.setFont(Theme.NORMAL_FONT);
+        portField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Theme.BORDER_COLOR, 1),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+
+        JTextField usernameField = new JTextField();
+        usernameField.setFont(Theme.NORMAL_FONT);
+        usernameField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Theme.BORDER_COLOR, 1),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+
+        // 添加标签和输入框
+        centerPanel.add(createLabeledField("服务器地址:", hostField), gbc);
+        centerPanel.add(createLabeledField("端口:", portField), gbc);
+        centerPanel.add(createLabeledField("用户名:", usernameField), gbc);
+
+        // 间隔
+        gbc.insets = new Insets(20, 0, 20, 0);
+        centerPanel.add(Box.createVerticalStrut(20), gbc);
+        gbc.insets = new Insets(10, 0, 10, 0);
+
+        // 连接按钮
+        JButton connectButton = Theme.createPrimaryButton("连接");
+        connectButton.setPreferredSize(new Dimension(150, 45));
+        connectButton.addActionListener(e -> {
+            String host = hostField.getText().trim();
+            String portStr = portField.getText().trim();
+            String username = usernameField.getText().trim();
+
+            if (host.isEmpty() || portStr.isEmpty() || username.isEmpty()) {
+                CustomDialog.showMessageDialog(this, "所有字段都不能为空！", "错误", CustomDialog.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                int port = Integer.parseInt(portStr);
+                connectToServer(host, port, username);
+            } catch (NumberFormatException ex) {
+                CustomDialog.showMessageDialog(this, "端口号格式错误！", "错误", CustomDialog.ERROR_MESSAGE);
+            }
+        });
+        centerPanel.add(connectButton, gbc);
+
+        loginPanel.add(centerPanel, BorderLayout.CENTER);
+
+        // 底部信息
+        JPanel footerPanel = new JPanel();
+        footerPanel.setBackground(Theme.BG_COLOR);
+        footerPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 20, 20));
+
+        JLabel footerLabel = new JLabel("版本 v1.5 ");
+        footerLabel.setFont(Theme.SMALL_FONT);
+        footerLabel.setForeground(Color.GRAY);
+        footerPanel.add(footerLabel);
+
+        loginPanel.add(footerPanel, BorderLayout.SOUTH);
+
+        return loginPanel;
+    }
+
     /**
-     * 初始化GUI组件
+     * 创建带标签的输入字段
      */
-    private void initComponents() {
-        setTitle("五子棋联机对战");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout(0, 0));
-        getContentPane().setBackground(Theme.BG_COLOR);
+    private JPanel createLabeledField(String labelText, JTextField textField) {
+        JPanel panel = new JPanel(new BorderLayout(10, 0));
+        panel.setOpaque(false);
+
+        JLabel label = new JLabel(labelText);
+        label.setFont(Theme.BOLD_FONT);
+        label.setForeground(Theme.TEXT_COLOR);
+        label.setPreferredSize(new Dimension(100, 30));
+
+        panel.add(label, BorderLayout.WEST);
+        panel.add(textField, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private JPanel createGamePanel() {
+        JPanel gamePanel = new JPanel(new BorderLayout(0, 0));
+        gamePanel.setBackground(Theme.BG_COLOR);
 
         // 创建顶部导航栏面板 - 横跨整个窗口
         JPanel navPanel = new JPanel(new GridLayout(1, 2, 10, 0));
@@ -126,7 +253,7 @@ public class GameGUI extends JFrame implements NetworkHandler {
         seatStatusLabel.setBorder(Theme.createShadowBorder());
         navPanel.add(seatStatusLabel);
 
-        add(navPanel, BorderLayout.NORTH);
+        gamePanel.add(navPanel, BorderLayout.NORTH);
 
         // 创建中间内容面板（棋盘+功能区）
         JPanel contentPanel = new JPanel(new BorderLayout(15, 0));
@@ -196,13 +323,10 @@ public class GameGUI extends JFrame implements NetworkHandler {
                         Theme.NORMAL_FONT,
                         Theme.TEXT_COLOR)));
 
-        chatArea = new JTextArea();
+        chatArea = new JTextPane();
         chatArea.setEditable(false);
-        chatArea.setLineWrap(true);
-        chatArea.setWrapStyleWord(true);
-        chatArea.setFont(Theme.NORMAL_FONT);
+        chatDoc = chatArea.getStyledDocument();
         chatArea.setBackground(Theme.READONLY_BG);
-        chatArea.setForeground(Theme.TEXT_COLOR);
         chatArea.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         JScrollPane chatScroll = new JScrollPane(chatArea);
         chatScroll.setBorder(null);
@@ -248,7 +372,37 @@ public class GameGUI extends JFrame implements NetworkHandler {
 
         contentPanel.add(rightPanel, BorderLayout.EAST);
 
-        add(contentPanel, BorderLayout.CENTER);
+        gamePanel.add(contentPanel, BorderLayout.CENTER);
+
+        return gamePanel;
+    }
+
+    /**
+     * 初始化GUI组件
+     */
+    private void initComponents() {
+        initComponents(true);
+    }
+
+    /**
+     * 初始化GUI组件
+     * 
+     * @param showLogin 是否显示登录界面
+     */
+    private void initComponents(boolean showLogin) {
+        setTitle("五子棋联机对战");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
+
+        JPanel loginPanel = createLoginPanel();
+        JPanel gamePanel = createGamePanel();
+
+        mainPanel.add(loginPanel, "login");
+        mainPanel.add(gamePanel, "game");
+
+        add(mainPanel);
 
         // 窗口关闭事件
         addWindowListener(new WindowAdapter() {
@@ -292,63 +446,21 @@ public class GameGUI extends JFrame implements NetworkHandler {
     }
 
     /**
-     * 显示登录对话框
-     */
-    private void showLoginDialog() {
-        JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        JTextField hostField = new JTextField("localhost");
-        JTextField portField = new JTextField(String.valueOf(Protocol.DEFAULT_PORT));
-        JTextField usernameField = new JTextField();
-
-        panel.add(new JLabel("服务器地址:"));
-        panel.add(hostField);
-        panel.add(new JLabel("端口:"));
-        panel.add(portField);
-        panel.add(new JLabel("用户名:"));
-        panel.add(usernameField);
-
-        int result = JOptionPane.showConfirmDialog(
-                this, panel, "连接到服务器",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-        if (result == JOptionPane.OK_OPTION) {
-            String host = hostField.getText().trim();
-            String portStr = portField.getText().trim();
-            String username = usernameField.getText().trim();
-
-            if (username.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "用户名不能为空！", "错误", JOptionPane.ERROR_MESSAGE);
-                showLoginDialog();
-                return;
-            }
-
-            try {
-                int port = Integer.parseInt(portStr);
-                connectToServer(host, port, username);
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "端口号格式错误！", "错误", JOptionPane.ERROR_MESSAGE);
-                showLoginDialog();
-            }
-        } else {
-            System.exit(0);
-        }
-    }
-
-    /**
      * 连接到服务器
      */
     private void connectToServer(String host, int port, String username) {
         client = new Client(host, port, this);
+        playerRoles = new HashMap<>(); // 初始化角色映射
 
         if (client.connect()) {
             myUsername = username;
             client.login(username);
+            // 切换到游戏面板
+            cardLayout.show(mainPanel, "game");
             updateStatus("正在登录...");
         } else {
-            JOptionPane.showMessageDialog(this, "连接服务器失败！", "错误", JOptionPane.ERROR_MESSAGE);
-            showLoginDialog();
+            CustomDialog.showMessageDialog(this, "连接服务器失败！", "错误", CustomDialog.ERROR_MESSAGE);
+            // 连接失败，保持在登录界面
         }
     }
 
@@ -370,13 +482,110 @@ public class GameGUI extends JFrame implements NetworkHandler {
     }
 
     /**
-     * 添加聊天消息
+     * 添加聊天消息（带时间戳）
      */
-    private void addChatMessage(String message) {
+    private void addChatMessage(String sender, String timestamp, String message) {
         SwingUtilities.invokeLater(() -> {
-            chatArea.append(message + "\n");
-            chatArea.setCaretPosition(chatArea.getDocument().getLength());
+            try {
+                long currentTime = System.currentTimeMillis();
+
+                // 如果距离上一条消息超过5分钟，显示时间戳
+                if (currentTime - lastMessageTime > 5 * 60 * 1000) {
+                    addTimestamp(timestamp);
+                }
+                lastMessageTime = currentTime;
+
+                boolean isMe = sender.equals(myUsername);
+                String role = getPlayerRole(sender);
+
+                // 创建消息样式
+                Style msgStyle = chatArea.addStyle("msg", null);
+                StyleConstants.setFontFamily(msgStyle, "微软雅黑");
+                StyleConstants.setFontSize(msgStyle, 12);
+
+                // 根据角色设置特殊样式
+                if (role.contains("黑棋")) {
+                    // 黑棋玩家：黑色粗体，浅灰背景
+                    StyleConstants.setForeground(msgStyle, Color.BLACK);
+                    StyleConstants.setBold(msgStyle, true);
+                    StyleConstants.setBackground(msgStyle, new Color(240, 240, 240));
+                } else if (role.contains("白棋")) {
+                    // 白棋玩家：深灰色，白色背景带边框效果
+                    StyleConstants.setForeground(msgStyle, new Color(60, 60, 60));
+                    StyleConstants.setBold(msgStyle, true);
+                    StyleConstants.setBackground(msgStyle, new Color(252, 252, 252));
+                } else if (isMe) {
+                    // 观战者且是自己：蓝色
+                    StyleConstants.setForeground(msgStyle, new Color(41, 128, 185));
+                } else {
+                    // 其他观战者：普通黑色
+                    StyleConstants.setForeground(msgStyle, Theme.TEXT_COLOR);
+                }
+
+                // 设置对齐方式
+                if (isMe) {
+                    StyleConstants.setAlignment(msgStyle, StyleConstants.ALIGN_RIGHT);
+                } else {
+                    StyleConstants.setAlignment(msgStyle, StyleConstants.ALIGN_LEFT);
+                }
+
+                // 插入消息
+                int offset = chatDoc.getLength();
+                String roleTag = role.isEmpty() ? "" : "[" + role + "] ";
+                String fullMsg = (isMe ? "" : sender + ": ") + roleTag + message + "\n";
+                chatDoc.insertString(offset, fullMsg, msgStyle);
+                chatDoc.setParagraphAttributes(offset, fullMsg.length(), msgStyle, false);
+
+                chatArea.setCaretPosition(chatDoc.getLength());
+            } catch (BadLocationException e) {
+                e.printStackTrace();
+            }
         });
+    }
+
+    /**
+     * 添加时间戳（居中显示）
+     */
+    private void addTimestamp(String timestamp) {
+        try {
+            Style timeStyle = chatArea.addStyle("time", null);
+            StyleConstants.setAlignment(timeStyle, StyleConstants.ALIGN_CENTER);
+            StyleConstants.setFontFamily(timeStyle, "微软雅黑");
+            StyleConstants.setFontSize(timeStyle, 10);
+            StyleConstants.setForeground(timeStyle, new Color(150, 150, 150));
+
+            int offset = chatDoc.getLength();
+            String timeMsg = "—— " + timestamp + " ——\n";
+            chatDoc.insertString(offset, timeMsg, timeStyle);
+            chatDoc.setParagraphAttributes(offset, timeMsg.length(), timeStyle, false);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 获取玩家角色标识
+     */
+    private String getPlayerRole(String username) {
+        if (username.equals(myUsername)) {
+            if (Protocol.PLAYER_BLACK.equals(myRole))
+                return "黑棋";
+            if (Protocol.PLAYER_WHITE.equals(myRole))
+                return "白棋";
+            return "观战";
+        }
+
+        // 从角色映射表中查找
+        String role = playerRoles.get(username);
+        if (role != null) {
+            if (Protocol.PLAYER_BLACK.equals(role))
+                return "黑棋";
+            if (Protocol.PLAYER_WHITE.equals(role))
+                return "白棋";
+            return "观战";
+        }
+
+        return "";
     }
 
     /**
@@ -430,16 +639,16 @@ public class GameGUI extends JFrame implements NetworkHandler {
      * 退出房间，返回房间大厅
      */
     private void quitGame() {
-        int result = JOptionPane.showConfirmDialog(
+        int result = CustomDialog.showConfirmDialog(
                 this, "确定要退出房间吗？",
-                "确认", JOptionPane.YES_NO_OPTION);
+                "确认", CustomDialog.YES_NO_OPTION);
 
-        if (result == JOptionPane.YES_OPTION) {
+        if (result == CustomDialog.YES_OPTION) {
             // 先关闭当前窗口，避免接收后续的服务器消息
             dispose();
 
-            // 发送退出房间消息（但不断开连接）
-            if (client != null && client.isConnected()) {
+            // 只有在房间中时才发送退出房间消息
+            if (client != null && client.isConnected() && roomId != null) {
                 client.sendMessage(Protocol.buildMessage(Protocol.QUIT));
             }
 
@@ -543,8 +752,9 @@ public class GameGUI extends JFrame implements NetworkHandler {
     @Override
     public void onLoginFail(String reason) {
         SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(this, "登录失败: " + reason, "错误", JOptionPane.ERROR_MESSAGE);
-            showLoginDialog();
+            CustomDialog.showMessageDialog(this, "登录失败: " + reason, "错误", CustomDialog.ERROR_MESSAGE);
+            // 切换回登录界面
+            cardLayout.show(mainPanel, "login");
         });
     }
 
@@ -602,7 +812,7 @@ public class GameGUI extends JFrame implements NetworkHandler {
         previewStone = null;
         SwingUtilities.invokeLater(() -> {
             boardPanel.repaint();
-            JOptionPane.showMessageDialog(this, "落子失败: " + reason, "提示", JOptionPane.WARNING_MESSAGE);
+            CustomDialog.showMessageDialog(this, "落子失败: " + reason, "提示", CustomDialog.WARNING_MESSAGE);
         });
     }
 
@@ -625,7 +835,7 @@ public class GameGUI extends JFrame implements NetworkHandler {
         // 弹窗通知游戏结果
         final String finalMessage = message;
         SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(this, finalMessage, "游戏结束", JOptionPane.INFORMATION_MESSAGE);
+            CustomDialog.showMessageDialog(this, finalMessage, "游戏结束", CustomDialog.INFORMATION_MESSAGE);
             updateButtons();
         });
     }
@@ -650,11 +860,14 @@ public class GameGUI extends JFrame implements NetworkHandler {
 
     @Override
     public void onChatMessage(String sender, String timestamp, String message) {
-        addChatMessage("[" + timestamp + "] " + sender + ": " + message);
+        addChatMessage(sender, timestamp, message);
     }
 
     @Override
     public void onRoleChange(String username, String newRole) {
+        // 更新角色映射表
+        playerRoles.put(username, newRole);
+
         if (username.equals(myUsername)) {
             myRole = newRole;
             if (newRole.equals(Protocol.PLAYER_BLACK)) {
@@ -672,14 +885,14 @@ public class GameGUI extends JFrame implements NetworkHandler {
     @Override
     public void onTakeoverAsk(String spectatorName) {
         SwingUtilities.invokeLater(() -> {
-            int result = JOptionPane.showConfirmDialog(
+            int result = CustomDialog.showConfirmDialog(
                     this,
                     spectatorName + " 请求接手你的位置，是否同意？",
                     "接手请求",
-                    JOptionPane.YES_NO_OPTION);
+                    CustomDialog.YES_NO_OPTION);
 
             if (client != null && client.isConnected()) {
-                client.respondTakeover(spectatorName, result == JOptionPane.YES_OPTION);
+                client.respondTakeover(spectatorName, result == CustomDialog.YES_OPTION);
             }
         });
     }
@@ -691,7 +904,7 @@ public class GameGUI extends JFrame implements NetworkHandler {
 
         if (!success) {
             SwingUtilities.invokeLater(() -> {
-                JOptionPane.showMessageDialog(this, message, "提示", JOptionPane.INFORMATION_MESSAGE);
+                CustomDialog.showMessageDialog(this, message, "提示", CustomDialog.INFORMATION_MESSAGE);
             });
         }
     }
@@ -716,7 +929,7 @@ public class GameGUI extends JFrame implements NetworkHandler {
         addSystemMessage("=== 与服务器断开连接 ===");
 
         SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(this, "与服务器断开连接", "提示", JOptionPane.WARNING_MESSAGE);
+            CustomDialog.showMessageDialog(this, "与服务器断开连接", "提示", CustomDialog.WARNING_MESSAGE);
         });
     }
 
@@ -753,6 +966,14 @@ public class GameGUI extends JFrame implements NetworkHandler {
 
     @Override
     public void onSeatUpdate(String blackSeat, String whiteSeat, int spectatorCount) {
+        // 更新角色映射表
+        if (!blackSeat.equals("空")) {
+            playerRoles.put(blackSeat, Protocol.PLAYER_BLACK);
+        }
+        if (!whiteSeat.equals("空")) {
+            playerRoles.put(whiteSeat, Protocol.PLAYER_WHITE);
+        }
+
         // 添加调试日志
         System.out.println(
                 "DEBUG GameGUI.onSeatUpdate:黑棋=" + blackSeat + ", 白棋=" + whiteSeat + ", 观战=" + spectatorCount);
@@ -810,14 +1031,14 @@ public class GameGUI extends JFrame implements NetworkHandler {
     public void onBattleInviteNotify(String inviterName) {
         // 收到对战邀请
         SwingUtilities.invokeLater(() -> {
-            int result = JOptionPane.showConfirmDialog(
+            int result = CustomDialog.showConfirmDialog(
                     this,
                     inviterName + " 发起了对战邀请，是否同意开始游戏？",
                     "对战邀请",
-                    JOptionPane.YES_NO_OPTION);
+                    CustomDialog.YES_NO_OPTION);
 
             if (client != null && client.isConnected()) {
-                String response = (result == JOptionPane.YES_OPTION) ? Protocol.AGREE : Protocol.REFUSE;
+                String response = (result == CustomDialog.YES_OPTION) ? Protocol.AGREE : Protocol.REFUSE;
                 client.sendMessage(Protocol.buildMessage(Protocol.BATTLE_RESPONSE, response));
             }
         });

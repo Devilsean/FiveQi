@@ -17,11 +17,11 @@ public class Theme {
     public static final Color PRIMARY_DARK = new Color(41, 128, 185); // 深蓝
     public static final Color SECONDARY_COLOR = new Color(46, 204, 113); // 翠绿
     public static final Color ACCENT_COLOR = new Color(231, 76, 60); // 红色
-    public static final Color DANGER_COLOR = ACCENT_COLOR; // 危险/错误色
+    public static final Color DANGER_COLOR = new Color(231, 76, 60); // 危险/错误颜色(红色)
     public static final Color BG_COLOR = new Color(245, 246, 250); // 浅灰背景
     public static final Color TEXT_COLOR = new Color(44, 62, 80); // 深色文字
-    public static final Color TEXT_SECONDARY = new Color(127, 140, 141); // 次要文字
     public static final Color TEXT_LIGHT = new Color(236, 240, 241); // 浅色文字
+    public static final Color TEXT_SECONDARY = new Color(127, 140, 141); // 次要文字颜色(灰色)
     public static final Color BOARD_COLOR = new Color(222, 184, 135); // 木纹色
     public static final Color BOARD_LINE_COLOR = new Color(80, 60, 40); // 棋盘线条颜色
     public static final Color BORDER_COLOR = new Color(220, 220, 220); // 边框颜色
